@@ -6,5 +6,5 @@ using UnityEngine;
 public class SaveKey
 {
     public List<string> keyCodeStr = new List<string>();
-    public List<string> keyCodeArrayStr = new List<string>();
+    public List<int[]> keyCodeArrayStr = new List<int[]>();
 }

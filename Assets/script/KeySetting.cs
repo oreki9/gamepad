@@ -54,7 +54,12 @@ public class KeySetting : MonoBehaviour
         foreach(GameObject i in ButtonCodeList)
         {
             save.keyCodeStr.Add(i.transform.Find("Button").transform.GetChild(0).GetComponent<Text>().text);
-            save.keyCodeArrayStr.Add(i.transform.Find("Text").GetComponent<Text>().text);
+            int[] NewarrayInt = new int[8];
+            for(int o=0;o< i.transform.Find("Text").GetComponent<Text>().text.Length; o++)
+            {
+                NewarrayInt[o] = i.transform.Find("Text").GetComponent<Text>().text[o];
+            }
+            save.keyCodeArrayStr.Add(NewarrayInt);
         }
         return save;
     }

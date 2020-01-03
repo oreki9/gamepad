@@ -10,6 +10,7 @@ public class textline : MonoBehaviour
     List<string> keyList = new List<string>();
     int keyListNow = 0;
     SaveKey keyCodeList;
+    int colNow = 0;
 
     public List<GameObject> TextLine = new List<GameObject>();
     int TextLineNow = 0;
@@ -17,12 +18,19 @@ public class textline : MonoBehaviour
     bool[] HorizonKeyBool = { false, false };
     char SelectedChar;
 
-
+    bool afterAnalog = false;
+    string StringPredict = "";
+    bool afterPress = false;
     void Start() {
         keyCodeList = LoadSaveKey();
-        foreach(string i in keyCodeList.keyCodeArrayStr)
+        foreach(int[] i in keyCodeList.keyCodeArrayStr)
         {
-            keyList.Add(i);
+            string NewStr = "";
+            foreach (int o in i)
+            {
+                NewStr += (char)o;
+            }
+            keyList.Add(NewStr);
         }
         SelectedChar = '\0';
         foreach (GameObject i in TextLine) {
@@ -46,65 +54,93 @@ public class textline : MonoBehaviour
         string StrInLine = TextLine[TextLineNow].GetComponent<Text>().text;
         TextLine[TextLineNow].GetComponent<Text>().text = StrInLine + Newchr;
     }
+    void ChanceTextInLine(string NewStr,char Newchr,int col)
+    {
+        string NewStr2 = NewStr;
+        NewStr2 = NewStr2.Insert(col, Newchr.ToString());
+        TextLine[TextLineNow].GetComponent<Text>().text = NewStr2;
+    }
     void Update()
     {
         float vertikey = Input.GetAxis("Vertical");
         float Horikey = Input.GetAxis("Horizontal");
-        if (keyListNow > 0)
-        {
-            if ((Mathf.Abs(vertikey) >= 0.5f) || (Mathf.Abs(Horikey) >= 0.5f))
+        if ((Mathf.Abs(vertikey) >= 0.5f) || (Mathf.Abs(Horikey) >= 0.5f)){
+            if (!afterAnalog)
             {
-                if ((vertikey >= 0.5f) && (Horikey >= 0.5f))
+                StringPredict = TextLine[TextLineNow].GetComponent<Text>().text;
+            }
+            afterAnalog = true;
+            if ((vertikey >= 0.5f) && (Horikey >= 0.5f)){
+                SelectedChar = keyList[keyListNow][1];
+            }
+            else if ((vertikey <= -0.5f) && (Horikey >= 0.5f)){
+                SelectedChar = keyList[keyListNow][3];
+            }
+            else if ((vertikey >= 0.5f) && (Horikey <= -0.5f)){
+                SelectedChar = keyList[keyListNow][7];
+            }
+            else if ((vertikey <= -0.5f) && (Horikey <= -0.5f)){
+                SelectedChar = keyList[keyListNow][5];
+            }
+            else if (vertikey >= 0.5f){
+                SelectedChar = keyList[keyListNow][0];
+            }
+            else if (vertikey <= -0.5f){
+                SelectedChar = keyList[keyListNow][4];
+            }
+            else if (Horikey >= 0.5f){
+                if (!afterPress)
                 {
-                    SelectedChar = keyList[keyListNow - 1][1];
+                    colNow += 1;
                 }
-                else if ((vertikey <= -0.5f) && (Horikey >= 0.5f))
+                SelectedChar = keyList[keyListNow][2];
+            }
+            else if (Horikey <= -0.5f)
+            {
+                if (!afterPress)
                 {
-                    SelectedChar = keyList[keyListNow - 1][3];
+                    colNow -= 1;
                 }
-                else if ((vertikey >= 0.5f) && (Horikey <= -0.5f))
-                {
-                    SelectedChar = keyList[keyListNow - 1][7];
-                }
-                else if ((vertikey <= -0.5f) && (Horikey <= -0.5f))
-                {
-                    SelectedChar = keyList[keyListNow - 1][5];
-                }
-                else if (vertikey >= 0.5f)
-                {
-                    SelectedChar = keyList[keyListNow - 1][0];
-                }
-                else if (vertikey <= -0.5f)
-                {
-                    SelectedChar = keyList[keyListNow - 1][4];
-                }
-                else if (Horikey >= 0.5f)
-                {
-                    SelectedChar = keyList[keyListNow - 1][2];
-                }
-                else if (Horikey <= -0.5f)
-                {
-                    SelectedChar = keyList[keyListNow - 1][6];
-                }
+                SelectedChar = keyList[keyListNow][6];
+            }
+            if (colNow < 0)
+            {
+                colNow = 0;
+            }
+            if (colNow > StringPredict.Length)
+            {
+                colNow = StringPredict.Length;
+            }
+            if (afterPress)
+            {
+                ChanceTextInLine(StringPredict, SelectedChar, colNow);
             }
         }
-        for(int i=0;i<keyCodeList.keyCodeStr.Count;i++)
+        else
         {
-            keyListListen(SelectedChar, new eigthkey(keyCodeList.keyCodeStr[i], i+1));
+            if (afterAnalog)
+            {
+                colNow += 1;
+                afterAnalog = false;
+            }
+        }
+        for (int i=0;i<keyCodeList.keyCodeStr.Count;i++)
+        {
+            keyListListen(SelectedChar, new eigthkey(keyCodeList.keyCodeStr[i], i));
         }
     }
     void keyListListen(char SelectedChar, eigthkey selKeyString)
     {
         if (Input.GetKeyDown(StringToKeyCode(selKeyString.keycodestr)))
         {
+            afterPress = true;
             keyListNow = selKeyString.codekeyInt;
         }
         if (Input.GetKeyUp(StringToKeyCode(selKeyString.keycodestr)))
         {
-            if (SelectedChar != '\0')
-            {
-                AddTextInLine(SelectedChar);
-            }
+            afterAnalog = false;
+            colNow += 1;
+            afterPress = false;
             keyListNow = 0;
         }
     }
